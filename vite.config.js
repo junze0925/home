@@ -93,7 +93,13 @@ export default ({ mode }) =>
     ],
     server: {
       port: "3000",
-      open: true,
+      open: true,proxy: {
+    '/amap': {  // 匹配所有以 /amap 开头的请求
+      target: 'https://restapi.amap.com', // 高德的目标地址
+      changeOrigin: true, // 解决跨域的关键
+      rewrite: (path) => path.replace(/^\/amap/, '') // 去掉 /amap 前缀
+    }
+    }
     },
     resolve: {
       alias: [
