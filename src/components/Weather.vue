@@ -68,30 +68,79 @@ const getWeatherData = async () => {
         windpower: data.condition.day_wind_power,
       };
     } else {
-      // 获取 Adcode
-      const locationRes = await getAdcode(mainKey);
-      console.log(locationRes);
-      if (locationRes.code !== "200") {
-        throw "地区查询失败";
+  // 1. 定义获取经纬度的函数（会弹窗询问用户）
+  const getGPSLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject("浏览器不支持 GPS 定位");
+        return;
       }
-      const location = locationRes.location[0];
-     weatherData.adCode = {
-       city: location.name,  // 城市名称（如 "金华市"）
-       adcode: location.id,  // 城市 ID（如 "101260901"）
-     };
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve(`${longitude},${latitude}`); // 格式：经度,纬度
+        },
+        (error) => {
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 0,
+        }
+      );
+    });
+  };
 
-      // 获取天气信息
-      const weatherRes = await getWeather(mainKey, weatherData.adCode.adcode);
-      if (weatherRes.code !== "200")
-       throw "天气查询失败";
-      const now = weatherRes.now;
-      weatherData.weather = {
-        weather: now.text,          // 天气现象（如 "晴"）
-        temperature: now.temp,      // 气温（如 "20"）
-         winddirection: now.windDir, // 风向（自带 "风" 字）
-         windpower: now.windScale + "级", // 风力（数字 + "级"）
-      };
+  try {
+    let locationParam = 'auto'; // 默认为 auto
+    let cityName = '未知地区';
+
+    // 2. 尝试用 GPS 获取经纬度
+    try {
+      const coordStr = await getGPSLocation();
+      console.log('GPS 定位成功，经纬度:', coordStr);
+      locationParam = coordStr;
+    } catch (gpsError) {
+      console.warn('GPS 定位失败，将回退到 IP 定位:', gpsError.message);
+      // 如果用户拒绝或失败，继续保持 locationParam = 'auto'
     }
+
+    // 3. 用 locationParam (经纬度 或 auto) 反查城市
+    const locationRes = await getAdcode(mainKey, locationParam);
+    if (locationRes.code !== '200') {
+      throw `地理反查失败: ${locationRes.code}`;
+    }
+
+    // 4. 提取城市信息
+    const location = locationRes.location[0];
+    cityName = location.name;
+    const cityId = location.id;
+
+    weatherData.adCode = {
+      city: cityName,
+      adcode: cityId,
+    };
+
+    // 5. 获取天气数据
+    const weatherRes = await getWeather(mainKey, cityId);
+    if (weatherRes.code !== '200') {
+      throw `天气查询失败: ${weatherRes.code}`;
+    }
+
+    const now = weatherRes.now;
+    weatherData.weather = {
+      weather: now.text,
+      temperature: now.temp,
+      winddirection: now.windDir,
+      windpower: now.windScale + '级',
+    };
+
+  } catch (error) {
+    console.error('获取天气信息失败:', error);
+    onError('天气信息获取失败');
+  }
+}
   } catch (error) {
     console.error("天气信息获取失败:" + error);
     onError("天气信息获取失败");
