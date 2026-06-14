@@ -54,8 +54,10 @@ export const getHitokoto = async () => {
  */
 
 // 获取高德地理位置信息
-export const getAdcode = async (key) => {
-  const res = await fetch(`https://k56r72f3db.re.qweatherapi.com/geo/v2/city/lookup?location=auto&key=${key}`);
+export const getAdcode = async (key, locationParam = 'auto') => {
+  const res = await fetch(
+    `https://k56r72f3db.re.qweatherapi.com/geo/v2/city/lookup?location=${locationParam}&key=${key}`
+  );
   return await res.json();
 };
 
