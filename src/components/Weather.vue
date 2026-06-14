@@ -5,12 +5,10 @@
     <span>{{ weatherData.weather.temperature }}℃</span>
     <span class="sm-hidden">
       &nbsp;{{
-        weatherData.weather.winddirection?.endsWith("风")
-          ? weatherData.weather.winddirection
-          : weatherData.weather.winddirection + "风"
+        weatherData.weather.winddirection 
       }}&nbsp;
     </span>
-    <span class="sm-hidden">{{ weatherData.weather.windpower }}&nbsp;级</span>
+    <span class="sm-hidden">{{ weatherData.weather.windpower }}</span>
   </div>
   <div class="weather" v-else>
     <span>天气数据获取失败</span>
@@ -71,22 +69,27 @@ const getWeatherData = async () => {
       };
     } else {
       // 获取 Adcode
-      const adCode = await getAdcode(mainKey);
-      console.log(adCode);
-      if (adCode.infocode !== "10000") {
+      const locationRes = await getAdcode(mainKey);
+      console.log(locationRes);
+      if (locationRes.code !== "200") {
         throw "地区查询失败";
       }
-      weatherData.adCode = {
-        city: adCode.city,
-        adcode: adCode.adcode,
-      };
+      const location = locationRes.location[0];
+     weatherData.adCode = {
+       city: location.name,  // 城市名称（如 "金华市"）
+       adcode: location.id,  // 城市 ID（如 "101260901"）
+     };
+
       // 获取天气信息
-      const result = await getWeather(mainKey, weatherData.adCode.adcode);
+      const weatherRes = await getWeather(mainKey, weatherData.adCode.adcode);
+      if (weatherRes.code !== "200")
+       throw "天气查询失败";
+      const now = weatherRes.now;
       weatherData.weather = {
-        weather: result.lives[0].weather,
-        temperature: result.lives[0].temperature,
-        winddirection: result.lives[0].winddirection,
-        windpower: result.lives[0].windpower,
+        weather: now.text,          // 天气现象（如 "晴"）
+        temperature: now.temp,      // 气温（如 "20"）
+         winddirection: now.windDir, // 风向（自带 "风" 字）
+         windpower: now.windScale + "级", // 风力（数字 + "级"）
       };
     }
   } catch (error) {
