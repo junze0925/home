@@ -55,13 +55,13 @@ export const getHitokoto = async () => {
 
 // 获取高德地理位置信息
 export const getAdcode = async (key) => {
-  const res = await fetch(`/amap/v3/ip?key=${key}`);
+  const res = await fetch(`https://k56r72f3db.re.qweatherapi.com/geo/v2/city/lookup?location=auto&key=${key}`);
   return await res.json();
 };
 
 // 获取高德地理天气信息
-export const getWeather = async (key, city) => {
-  const res = await fetch(`/amap/v3/weather/weatherInfo?key=${key}&city=${city}`);
+export const getWeather = async (key, cityId) => {
+  const res = await fetch( `https://k56r72f3db.re.qweatherapi.com/v7/weather/now?location=${cityId}&key=${key}`);
   return await res.json();
 };
 
