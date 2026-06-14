@@ -54,16 +54,29 @@ export const getHitokoto = async () => {
  */
 
 // 获取高德地理位置信息
-export const getAdcode = async (key, locationParam = 'auto') => {
-  const res = await fetch(
-    `https://k56r72f3db.re.qweatherapi.com/geo/v2/city/lookup?location=${locationParam}&key=${key}`
-  );
-  return await res.json();
+// 高德 IP 定位（JSONP 版本，无跨域问题）
+export const getAdcode = (key) => {
+  return new Promise((resolve) => {
+    window._amap_callback = (data) => {
+      delete window._amap_callback;
+      resolve(data);
+    };
+    const script = document.createElement('script');
+    script.src = `https://restapi.amap.com/v3/ip?key=${key}&callback=_amap_callback`;
+    document.body.appendChild(script);
+  });
 };
 
-// 获取高德地理天气信息
-export const getWeather = async (key, cityId) => {
-  const res = await fetch( `https://k56r72f3db.re.qweatherapi.com/v7/weather/now?location=${cityId}&key=${key}`);
+// 和风天气（保持不变）
+export const getWeather = async (key, location) => {
+  const res = await fetch(`https://k56r72f3db.re.qweatherapi.com/v7/weather/now?location=${location}&key=${key}`);
+  return await res.json();
+};
+// 使用 adcode 查询和风天气标准 ID
+export const getCityIdByAdcode = async (key, adcode) => {
+  const res = await fetch(
+    `https://k56r72f3db.re.qweatherapi.com/geo/v2/city/lookup?location=${adcode}&key=${key}`
+  );
   return await res.json();
 };
 
