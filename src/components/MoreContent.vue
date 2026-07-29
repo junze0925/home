@@ -1,5 +1,5 @@
 <template>
-  <div class="more-content">您可在此编写任意内容</div>
+  <div class="more-content">与生活和解，和自己相逢</div>
 </template>
 
 <style lang="scss" scoped>
